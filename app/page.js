@@ -1,1 +1,29 @@
+'use client';
+import {useEffect,useMemo,useState} from 'react';
 
+const statuses=['Semua','Belum Visit','Sudah Visit'];
+function normalize(s){return (s||'').toString().toLowerCase()}
+export default function Home(){
+ const [data,setData]=useState([]),[q,setQ]=useState(''),[rating,setRating]=useState('Semua'),[status,setStatus]=useState('Semua'),[selected,setSelected]=useState(null),[showForm,setShowForm]=useState(false),[visit,setVisit]=useState({status:'Berhasil Ditemui',note:'',lat:'',lng:''}),[loading,setLoading]=useState(true);
+ useEffect(()=>{fetch('/data.json').then(r=>r.json()).then(d=>{setData(d);setLoading(false);});},[]);
+ const [visited,setVisited]=useState({});
+ useEffect(()=>{try{setVisited(JSON.parse(localStorage.getItem('visit-status')||'{}'))}catch{}} ,[]);
+ const merged=useMemo(()=>data.map(x=>({...x,visit:visited[x.contract]||null})),[data,visited]);
+ const ratings=useMemo(()=>['Semua',...Array.from(new Set(data.map(x=>x.rating).filter(Boolean)))],[data]);
+ const filtered=useMemo(()=>merged.filter(x=>{
+   const hay=normalize([x.name,x.contract,x.address,x.village,x.district,x.phone].join(' '));
+   return (!q||hay.includes(normalize(q))) && (rating==='Semua'||x.rating===rating) && (status==='Semua'||(status==='Sudah Visit'?!!x.visit:!x.visit));
+ }),[merged,q,rating,status]);
+ const stats=useMemo(()=>({total:data.length,done:merged.filter(x=>x.visit).length,pending:merged.filter(x=>!x.visit).length}),[data,merged]);
+ function openVisit(x){setSelected(x);setVisit({status:x.visit?.status||'Berhasil Ditemui',note:x.visit?.note||'',lat:x.visit?.lat||'',lng:x.visit?.lng||''});setShowForm(true)}
+ function locate(){if(!navigator.geolocation)return alert('Browser tidak mendukung lokasi.'); navigator.geolocation.getCurrentPosition(p=>setVisit(v=>({...v,lat:p.coords.latitude.toFixed(7),lng:p.coords.longitude.toFixed(7)})),()=>alert('Izin lokasi ditolak/tidak tersedia.'),{enableHighAccuracy:true,timeout:10000});}
+ function save(){if(!selected)return;const record={...visit,time:new Date().toISOString()};const next={...visited,[selected.contract]:record};setVisited(next);localStorage.setItem('visit-status',JSON.stringify(next));setShowForm(false)}
+ function clearVisit(x){const next={...visited};delete next[x.contract];setVisited(next);localStorage.setItem('visit-status',JSON.stringify(next))}
+ return <main>
+  <header><div className="brand"><div className="logo">WOM</div><div><h1>Visit Control</h1><p>WOM Finance Kendal · September 2026</p></div></div><button className="ghost" onClick={()=>{localStorage.removeItem('visit-status');setVisited({})}}>Reset Status Lokal</button></header>
+  <section className="hero"><div><span className="eyebrow">FIELD MONITORING</span><h2>Kontrol aktivitas visit tim</h2><p>Data customer dari sheet <b>DATA VISIT</b>. Tandai hasil visit dan simpan lokasi aktual langsung dari HP.</p></div><div className="stats"><div><strong>{stats.total}</strong><span>Total</span></div><div><strong>{stats.done}</strong><span>Sudah Visit</span></div><div><strong>{stats.pending}</strong><span>Belum Visit</span></div></div></section>
+  <section className="toolbar"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Cari nama, kontrak, alamat, HP..."/><select value={rating} onChange={e=>setRating(e.target.value)}>{ratings.map(r=><option key={r}>{r}</option>)}</select><select value={status} onChange={e=>setStatus(e.target.value)}>{statuses.map(s=><option key={s}>{s}</option>)}</select><span className="count">{filtered.length} customer</span></section>
+  <section className="tableWrap"><table><thead><tr><th>Customer</th><th>No. Kontrak</th><th>Alamat</th><th>Rating</th><th>Status</th><th>Aksi</th></tr></thead><tbody>{loading?<tr><td colSpan="6" className="empty">Memuat data...</td></tr>:filtered.map(x=><tr key={x.contract}><td><b>{x.name}</b><small>{x.phone}</small></td><td>{x.contract}<small>{x.priority} · {x.pa?'PA '+x.pa:''}</small></td><td>{x.address}<small>{x.village} · {x.district}</small></td><td><span className={'pill '+normalize(x.rating)}>{x.rating||'-'}</span></td><td>{x.visit?<span className="done">● Sudah Visit</span>:<span className="pending">● Belum Visit</span>}</td><td><div className="actions"><button onClick={()=>openVisit(x)}>Visit</button>{x.map&&<a href={x.map} target="_blank">📍 Map</a>}</div></td></tr>)}</tbody></table></section>
+  {showForm&&selected&&<div className="modalBg" onMouseDown={e=>e.target===e.currentTarget&&setShowForm(false)}><div className="modal"><div className="modalHead"><div><span className="eyebrow">FORM VISIT</span><h3>{selected.name}</h3><p>{selected.contract} · {selected.district}</p></div><button className="close" onClick={()=>setShowForm(false)}>×</button></div><label>Hasil Visit<select value={visit.status} onChange={e=>setVisit({...visit,status:e.target.value})}><option>Berhasil Ditemui</option><option>Tidak Ditemui</option><option>Janji Bayar</option><option>Alamat Tidak Ditemukan</option><option>Menolak Bertemu</option></select></label><label>Catatan<textarea value={visit.note} onChange={e=>setVisit({...visit,note:e.target.value})} placeholder="Tulis hasil kunjungan..."/></label><label>Lokasi Aktual<div className="loc"><input value={visit.lat&&visit.lng?`${visit.lat}, ${visit.lng}`:''} readOnly placeholder="Belum mengambil lokasi"/><button onClick={locate}>Ambil Lokasi</button></div></label>{visit.lat&&<a className="maplink" target="_blank" href={`https://www.google.com/maps?q=${visit.lat},${visit.lng}`}>Buka lokasi aktual di Google Maps ↗</a>}<div className="modalActions"><button className="ghost" onClick={()=>setShowForm(false)}>Batal</button>{selected.visit&&<button className="danger" onClick={()=>{clearVisit(selected);setShowForm(false)}}>Hapus Visit</button>}<button className="primary" onClick={save}>Simpan Visit</button></div></div></div>}
+ </main>
+}
