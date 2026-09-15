@@ -1,8 +1,8 @@
 {
   "name":"visit-control-kendal",
-  "version":"1.0.0",
+  "version":"2.0.0",
   "private":true,
   "scripts":{"dev":"next dev","build":"next build","start":"next start","lint":"next lint"},
-  "dependencies":{"next":"14.2.15","react":"18.3.1","react-dom":"18.3.1"},
+  "dependencies":{"@supabase/ssr":"latest","@supabase/supabase-js":"latest","next":"latest","react":"latest","react-dom":"latest","xlsx":"latest"},
   "devDependencies":{}
 }
