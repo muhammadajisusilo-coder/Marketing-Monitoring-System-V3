@@ -1,39 +1,15 @@
-# Visit Control Kendal v2
+# Visit Control Kendal — V4
 
-Versi ini mengubah sistem menjadi monitoring berbasis login Google + Supabase.
+Versi V4 memperbaiki inisialisasi Supabase agar konfigurasi public Supabase dapat diinjeksi saat runtime dari Next.js, sekaligus mempertahankan fallback ke `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 
-## Fitur
-- Login Google.
-- Dashboard tanpa form input visit.
-- Status `Bertemu` / `Tidak Bertemu` diperbarui admin melalui Excel/CSV.
-- Admin dapat upload spreadsheet dan upsert berdasarkan `NO KONTRAK`.
-- Admin dapat mengatur daftar email Google yang menjadi admin.
-- Nomor telepon tidak ditampilkan di dashboard pengguna.
-
-## Setup
-1. Buat project Supabase.
-2. Jalankan `supabase-schema.sql` di SQL Editor.
-3. Di Supabase Authentication > Providers > Google, aktifkan Google OAuth dan masukkan Client ID/Secret dari Google Cloud.
-4. Set URL callback/redirect sesuai URL Supabase yang diberikan pada halaman provider.
-5. Di Vercel tambahkan:
+## Deploy
+1. Upload seluruh isi folder ini ke repository GitHub.
+2. Pastikan Vercel menggunakan repository dan branch yang benar.
+3. Pastikan Environment Variables tersedia untuk Production dan Preview:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-6. Deploy ulang.
-7. Login pertama dengan akun yang akan menjadi admin. Tambahkan email tersebut ke tabel `admin_emails` melalui SQL Editor, contoh:
-   `insert into public.admin_emails(email) values ('admin@gmail.com');`
-8. Setelah masuk sebagai admin, menu Admin dapat dipakai untuk menambah/menghapus email admin.
+4. Setelah perubahan Environment Variables, lakukan **Redeploy** deployment terbaru.
+5. Buka URL Vercel.
 
-### Format spreadsheet
-Kolom utama yang dibaca:
-- `NO KONTRAK`
-- `NAMA KONSUMEN`
-- `DATA PRIORITY`
-- `PA`
-- `ALAMAT`
-- `KELURAHAN`
-- `KECAMATAN`
-- `GOOGLE MAP`
-- `RATING`
-- `CEK VISIT` atau `STATUS VISIT`
-
-Nilai status yang dikenali antara lain `Bertemu`, `Tidak Bertemu`, `Sudah Visit`, `Tidak Ditemui`, `Ya`, `Tidak`.
+## Keamanan
+Publishable/anon key Supabase memang digunakan di browser. Jangan pernah menaruh `service_role` key pada environment variable `NEXT_PUBLIC_*` atau kode browser.
