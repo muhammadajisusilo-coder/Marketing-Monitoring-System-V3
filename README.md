@@ -1,15 +1,13 @@
-# Visit Control Kendal — V4
+# Visit Control Kendal V5
 
-Versi V4 memperbaiki inisialisasi Supabase agar konfigurasi public Supabase dapat diinjeksi saat runtime dari Next.js, sekaligus mempertahankan fallback ke `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+Versi ini mengganti client Supabase browser dari `@supabase/ssr` menjadi `@supabase/supabase-js` langsung dan mendukung dua nama key:
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+- NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
-## Deploy
-1. Upload seluruh isi folder ini ke repository GitHub.
-2. Pastikan Vercel menggunakan repository dan branch yang benar.
-3. Pastikan Environment Variables tersedia untuk Production dan Preview:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. Setelah perubahan Environment Variables, lakukan **Redeploy** deployment terbaru.
-5. Buka URL Vercel.
+Tambahan endpoint `/api/config` hanya menampilkan status keberadaan konfigurasi (bukan nilai key penuh).
 
-## Keamanan
-Publishable/anon key Supabase memang digunakan di browser. Jangan pernah menaruh `service_role` key pada environment variable `NEXT_PUBLIC_*` atau kode browser.
+Vercel Environment Variables yang diperlukan:
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY (isi Publishable Key Supabase)
+
+Setelah commit, lakukan Redeploy Production. Jangan rotate/unlink variable.
